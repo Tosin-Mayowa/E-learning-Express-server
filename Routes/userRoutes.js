@@ -1,5 +1,5 @@
 const express=require('express');
-const { getAllUsers,registerUser, getUser } = require('../Controllers/userController');
+const { getAllUsers,registerUser, getUser,updateUser,deleteUser,validateInput,} = require('../Controllers/userController');
 const router=express.Router();
 
 router.param('id',(req,res,next,id)=>{
@@ -13,6 +13,7 @@ router.route('/')
 
 router.route('/:id')
 .get(getUser)
-
+.patch(validateInput,updateUser)
+.delete(deleteUser)
 
 module.exports=router;
