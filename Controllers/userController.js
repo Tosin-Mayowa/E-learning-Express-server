@@ -16,16 +16,14 @@ module.exports.validateInput=(req,res,next)=>{
 module.exports.getAllUsers=async (req,res)=>{
     try {
     
-      const apiFeatures=new ApiFeatures(User.find(),req.query);
+      const apiFeatures=new ApiFeatures(User.find(),req.query)
+      .filter()
+      .sort()
+      .limitField()
+      .pagination();
  
-    
+   const users= await apiFeatures.queryModel;
         
-       
-        if(req.query.sort){
-           
-        }
-         
-        const users=await query;
         return res.status(200).json({
             status:"success",
             length:users.length,
