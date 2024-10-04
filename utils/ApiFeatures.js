@@ -9,7 +9,7 @@ class ApiFeatures{
     
         for(let key in queryParams){
            
-            if(typeof queryParams[key]==='object'){
+            if(typeof queryParams[key]==='object'&& !Array.isArray(queryParams[key])){
                 for(let operator in queryParams[key]){
                     if(operator==='lte'){
                         filterOptions[key]={...filterOptions[key],$lte:queryParams[key][operator]}
@@ -26,6 +26,8 @@ class ApiFeatures{
             }
            
         }
+        console.log(filterOptions,'fill');
+        
         return filterOptions;
     }
     filter() {

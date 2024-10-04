@@ -1,22 +1,18 @@
 const {mongoose}=require('mongoose');
-
+const DateManipulation=require("../utils/DateManipulation");
 const userSchema=new mongoose.Schema({
     fullName: {
         type: String,
         required: [true, "Name cannot be empty"],
         unique: true,
-        // validate: {
-        //   validator: function(value) {
-        //     return typeof value === 'string';
-        //   },
-        //   message: "Name must be a string, not a number"
-        // }
+       
       },
     address:String,
     dateOfBirth:{
         type:Date,
         required:[true,"date of birth cannot be empty"],
     },
+ 
     country:{
         type:String,
         required:[true,"country cannot be empty"],
@@ -37,6 +33,18 @@ const userSchema=new mongoose.Schema({
             unique:true
         
     },
+    tuitionFee:{ 
+        type:Number,
+        default:0,    
+},
+deposit:{ 
+    type:Number,
+    default:0,    
+},
+balance:{ 
+    type:Number,
+    default:0,    
+},
     email:{
         type:String,
         required:[true,"email cannot be empty"],
@@ -44,8 +52,10 @@ const userSchema=new mongoose.Schema({
     },
     password:{
         type:String,
-        required:[true,"email cannot be empty"],
-        trim:true     
+        required:[true,"cannot be empty cannot be empty"],
+        trim:true ,
+        unique:false,
+        select:false  
     },
     courses:{
         type:[String],
@@ -54,6 +64,22 @@ const userSchema=new mongoose.Schema({
     dateCreated:{
         type:Date,
         default:Date.now()
+    },
+    paymentDate:{
+        type:Date, 
+        default:Date.now()  
+    },
+    paymentPlan:{
+           type:String,
+           default:'2weeks'
+    },
+    dueDate:{
+        type:Date,
+        default:Date.now()  
+
+    },
+    duration:{
+        type:Number,  
     },
     isActive:{
         type:Boolean,
@@ -67,6 +93,14 @@ const userSchema=new mongoose.Schema({
         type:String,
         default:"enable"
     },
+},{
+    toJSON:{virtuals:true}
 });
+
+userSchema.virtual('age').get(function(){
+    const dateManipulation= new DateManipulation(this.dateOfBirth);
+    dateManipulation.calculateAge();
+   return dateManipulation.age;
+})
 
  module.exports.User=mongoose.model('User', userSchema);
