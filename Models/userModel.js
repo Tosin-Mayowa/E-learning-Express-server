@@ -1,11 +1,18 @@
 const {mongoose}=require('mongoose');
 const DateManipulation=require("../utils/DateManipulation");
+var validator = require('validator');
 const userSchema=new mongoose.Schema({
     fullName: {
         type: String,
         required: [true, "Name cannot be empty"],
         unique: true,
-       
+        validate: {
+            validator: function (v) {
+             
+              return v.split(' ').every(part => validator.isAlpha(part));
+            },
+            message: "Name cannot contain numbers or special characters",
+          },
       },
     address:String,
     dateOfBirth:{
@@ -30,8 +37,14 @@ const userSchema=new mongoose.Schema({
         
             type:Number,
             required:[true,"phone number cannot be empty"],
-            unique:true
-        
+            unique:true,
+            validate: {
+                validator: function (v) {
+                    const phoneRegex = /^(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}$/;
+                  return phoneRegex.test(v);
+                },
+                message: "Invalid phone numbers",
+              },
     },
     tuitionFee:{ 
         type:Number,
@@ -48,12 +61,14 @@ balance:{
     email:{
         type:String,
         required:[true,"email cannot be empty"],
-        unique:true
+        unique:true,
+        validate:[validator.isEmail,"Invalid email input"]
     },
     password:{
         type:String,
         required:[true,"cannot be empty cannot be empty"],
         trim:true ,
+        minlength:[8,"minimum of 8 characters"],
         unique:false,
         select:false  
     },
@@ -85,16 +100,19 @@ balance:{
         type:Boolean,
         default:false
     },
-    lastModified:{
-        type:Date,
-        default:Date.now()
-    },
+    lastModified:Date,
+        
+        
     status:{
         type:String,
         default:"enable"
     },
+    role:{
+        type:String
+    }
 },{
-    toJSON:{virtuals:true}
+    toJSON:{virtuals:true},
+    toObject:{virtuals:true}
 });
 
 userSchema.virtual('age').get(function(){
@@ -102,5 +120,12 @@ userSchema.virtual('age').get(function(){
     dateManipulation.calculateAge();
    return dateManipulation.age;
 })
-
+userSchema.pre('save',function(next){
+this.role='student';
+next();
+})
+userSchema.pre('findOneAndUpdate',function(next){
+    this.set={lastModified:new Date()};
+    next();
+    })
  module.exports.User=mongoose.model('User', userSchema);
