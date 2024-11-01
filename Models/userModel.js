@@ -1,6 +1,8 @@
 const {mongoose}=require('mongoose');
 const DateManipulation=require("../utils/DateManipulation");
-var validator = require('validator');
+const bcrypt=require("bcryptjs");
+const validator = require('validator');
+const crypto = require('crypto');
 const userSchema=new mongoose.Schema({
     fullName: {
         type: String,
@@ -30,7 +32,7 @@ const userSchema=new mongoose.Schema({
     },
     matricNo:{
         type:String,
-        required:[true,"matric number cannot be empty"],
+        required:[function() { return this.role === 'student'},"matric number cannot be empty"],
         unique:true
     },
     phoneNumber:{
@@ -62,6 +64,7 @@ balance:{
         type:String,
         required:[true,"email cannot be empty"],
         unique:true,
+        lowercase: true,
         validate:[validator.isEmail,"Invalid email input"]
     },
     password:{
@@ -74,42 +77,61 @@ balance:{
     },
     courses:{
         type:[String],
-        required:[true,"courses cannot be empty"],
+        required: [function() { return this.role === 'student' || this.role === 'tutor'; },"This field cannot be empty"]
     },
     dateCreated:{
         type:Date,
         default:Date.now()
     },
+    
+    gender:String,
+
     paymentDate:{
         type:Date, 
         default:Date.now()  
     },
     paymentPlan:{
            type:String,
-           default:'2weeks'
+           required: function() { return this.role === 'student'; }, 
+        default: function() { return this.role === 'student' ? '2weeks': undefined; }
+           
     },
     dueDate:{
         type:Date,
-        default:Date.now()  
+        required: function() { return this.role === 'student'; }, 
+        default: function() { return this.role === 'student' ? Date.now() : undefined; }
+         
 
     },
     duration:{
         type:Number,  
+    },
+    profilePicture:String,
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationToken: {
+        type: String,
+    },
+    verificationTokenExpires: {
+        type: Date,
     },
     isActive:{
         type:Boolean,
         default:false
     },
     lastModified:Date,
-        
-        
+     
     status:{
         type:String,
         default:"enable"
     },
-    role:{
-        type:String
-    }
+    role: {
+        type: String,
+        enum: ['admin', 'tutor', 'student','sa'],
+        default: 'student'
+      },
 },{
     toJSON:{virtuals:true},
     toObject:{virtuals:true}
@@ -120,12 +142,29 @@ userSchema.virtual('age').get(function(){
     dateManipulation.calculateAge();
    return dateManipulation.age;
 })
-userSchema.pre('save',function(next){
-this.role='student';
+userSchema.pre('save',async function(next){
+if(!this.isModified('password')) return next();
+this.password=await bcrypt.hash(this.password,12);
 next();
 })
 userSchema.pre('findOneAndUpdate',function(next){
     this.set={lastModified:new Date()};
     next();
     })
+    userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
+        // 'this' refers to the individual user document
+        return await bcrypt.compare(candidatePassword, userPassword);
+      };
+      userSchema.methods.createVerificationToken = function () {
+        const token = crypto.randomBytes(32).toString('hex');
+    
+        this.verificationToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+    
+        this.verificationTokenExpires = Date.now() + 10 * 60 * 1000; // Token expires in 10 minutes
+    
+        return token;
+    };
  module.exports.User=mongoose.model('User', userSchema);

@@ -87,7 +87,7 @@ this.queryModel=this.queryModel.sort({createdAt:-1});
  pagination(){
     
         let page=parseInt(this.queryString.page)||1;
-        let limit=parseInt(this.queryString.limit)||10;
+        let limit=parseInt(this.queryString.limit)||100; //I can only see 10 in my postman call but I can increase to 100, so you can see on postman
         let skip=(page-1)*limit;
         this.queryModel=this.queryModel.limit(limit).skip(skip);
     //     if(this.queryString.page){

@@ -21,6 +21,7 @@ const DateManipulation=require("../utils/DateManipulation");
 
 module.exports.getAllUsers=asyncErrorHandler(async (req,res,next)=>{
    
+   
     
     const apiFeatures=new ApiFeatures(User.find(),req.query)
     .filter()
@@ -29,7 +30,7 @@ module.exports.getAllUsers=asyncErrorHandler(async (req,res,next)=>{
     .pagination();
 
  const users= await apiFeatures.queryModel;
-      
+ 
       return res.status(200).json({
           status:"success",
           length:users.length,
@@ -59,15 +60,7 @@ module.exports.getUser=asyncErrorHandler(async (req,res,next)=>{
 )
 
 
-module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
-    
-   const user=await User.create({...req.body}) 
-   return res.status(201).json({
-       status:"success",
-       message:"user registered successfully"
-   })
-    
-   })
+
 
 module.exports.updateUser=asyncErrorHandler(async (req,res,next)=>{
 
