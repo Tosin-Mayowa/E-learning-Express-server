@@ -32,7 +32,6 @@ const userSchema=new mongoose.Schema({
     },
     matricNo:{
         type:String,
-        required:[function() { return this.role === 'student'},"matric number cannot be empty"],
         unique:true
     },
     phoneNumber:{

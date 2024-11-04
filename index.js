@@ -6,11 +6,13 @@ const cors = require('cors');
 const userRouter=require('./Routes/userRouter');
 const { globalErrorHandler } = require('./Controllers/errorController');
 const CustomError = require('./utils/CustomError');
+const { swaggerDocs } = require('./utils/swagger');
+const swaggerUi = require('swagger-ui-express');
 const app=express();
 
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174',
-    'http://localhost:5175',];
+    'http://localhost:5175','https://e-learning-express-server.vercel.app'];
 
 const corsOptions = {
     origin: (origin, callback) => {
@@ -37,7 +39,7 @@ app.get('/',(req,res)=>{
 })
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/users/profile',userRouter);
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.all('*',(req,res,next)=>{
    

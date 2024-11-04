@@ -13,7 +13,7 @@ process.on('uncaughtException',(err)=>{
 const app=require('./index')
 
 const {PORT}=process.env;
-mongoose.connect(process.env.LOCAL_CONN_STR).then(()=>{
+mongoose.connect(process.env.REMOTE_CONN_STR).then(()=>{
     console.log('connection to mongodb sucessful');
 })
 const server=app.listen(PORT || 8000,()=>{

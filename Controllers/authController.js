@@ -7,7 +7,15 @@ const DateManipulation=require("../utils/DateManipulation");
 const sendEmail = require('../utils/EmailSender');
 const crypto = require('crypto');
 
-
+module.exports.restrict=(...role)=>{
+  return (req,res,next)=>{
+    if(!role.includes(req.user.role)){
+      const error= new CustomError('You do not have access to perform this action',403);
+      next(error);
+    }
+    next();
+  }
+}
 module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
     console.log('body',req.body);
     

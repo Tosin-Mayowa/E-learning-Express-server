@@ -6,8 +6,16 @@ const castErrorHandler=(err)=>{
 }
 
 const duplicateErrorHandler=(err)=>{
-    const msg=`The user with fullname: ${err.keyValue.fullName} already exist, duplicate field not allowed`
+    const msg=`duplicate field not allowed`
     return new CustomError(msg,400);
+}
+const TokenErrorHandler=(err)=>{
+    const msg=`Token has expired, kindly login again`
+    return new CustomError(msg,401);
+}
+const jwtErrorHandler=(err)=>{
+    const msg=`invalid token, kindly login again`
+    return new CustomError(msg,401);
 }
 const validationErrorHandler=(err)=>{
     const errors=Object.values(err.errors).map(item=>item.message);
@@ -57,9 +65,18 @@ module.exports.globalErrorHandler=(error,req,res,next)=>{
 
             error=validationErrorHandler(error);
         }
+        if(error.name==='TokenExpiredError'){
+
+            error=TokenErrorHandler(error);
+        }
         if(error.code===11000){
            
             error=duplicateErrorHandler(error)
+        }
+
+        if(error.name==='JsonWebTokenError'){
+
+            error=jwtErrorHandler(error);
         }
         
        productionErrors(res,error);
