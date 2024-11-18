@@ -46,13 +46,11 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
     })
 
 
-
-
     module.exports.login=asyncErrorHandler(async (req,res,next)=>{
         const {email,password}=req.body;
         const user = await User.findOne({ email }).select('+password');
         if (!user || !(await user.correctPassword(password, user.password))) {
-            // return res.status(401).json({ status: 'fail', message: 'Invalid email or password' });
+           
             const  message='Invalid email or password'
             const err=new CustomError(message,401);
            return next(err);
@@ -64,7 +62,16 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
    return next(err);
 
   }
-          
+     
+  if (user.status!=="enabled") {
+    const  message='Your Account has been suspended,Kindly contact the admin.';
+    const err=new CustomError(message,403);
+   return next(err);
+
+  }
+  user.isActive=true;
+  await user.save({ validateBeforeSave: false })
+
   const token = jwt.sign({ id: user._id,email:user.email }, process.env.SECRET_STRING, {
     expiresIn: process.env.EXPIRES_IN,
   });
@@ -72,6 +79,7 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
   res.status(200).json({
     status: 'success',
     token,
+    expiresIn: process.env.EXPIRES_IN,
   });
     })
   
@@ -135,4 +143,57 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
   
           return res.status(200).json({ status: 'success', message: 'Verification link sent!' });
      
+  })
+
+  module.exports.forgotPassword=asyncErrorHandler(async (req,res,next)=>{
+    const user= await User.findOne({email:req.body.email});
+    if(!user){
+      return next(new CustomError('user not found',404));
+    }
+
+    const token = user.createVerificationToken(); // Assuming this method exists in your User model
+    await user.save({ validateBeforeSave: false });
+
+    // Send verification email
+    // const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${token}`;
+    const resetUrl = `${req.protocol}://localhost:5173/forgotPasswor/${token}`;
+    
+    const message = `We have have received a password reset request.Please use the below link to reset your password\n\n${resetUrl}`;
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Password Reset',
+      message,
+  });
+
+  return res.status(200).json({ status: 'success', message: 'Password reset link sent!' });
+
+
+  })
+
+  module.exports.resetPassword=asyncErrorHandler(async (req,res,next)=>{
+    const token = req.params.token;
+    
+    // Hash the token to match what is stored in the database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with the token that hasn't expired
+    const user = await User.findOne({
+      verificationToken: hashedToken,
+      verificationTokenExpires: { $gt: Date.now() },
+    }).select("+password");
+ 
+    if (!user) {
+      return next(new CustomError("Invalid Token or has expired",400));
+    }
+
+    user.password = req.body.password;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      status:"success",
+      message:"password reset successful"
+    })
   })

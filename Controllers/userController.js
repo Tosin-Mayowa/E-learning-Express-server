@@ -70,26 +70,26 @@ module.exports.updateUser=asyncErrorHandler(async (req,res,next)=>{
   
   
       if(req.body.paymentDate&&req.body.paymentPlan==="2weeks"){
-          console.log("paymentDate",req.body.paymentDate);
+          
           const dueDate=dateManipulation.increaseByTwoWeeks(req.body.paymentDate);
         body={...body,dueDate};
-        console.log({weeklyDue:body});
+       
       }else if(req.body.paymentDate&&req.body.paymentPlan==="1month"){
-          console.log("paymentDate",req.body.paymentDate);
+         
           const dueDate=dateManipulation.increaseByOneMonth(req.body.paymentDate);
         body={...body,dueDate};
-        console.log({monthlyDue:body});
+        
       }
       else if(req.body.paymentDate&&req.body.paymentPlan==="2months"){
-          console.log("paymentDate",req.body.paymentDate);
+         
           const dueDate=dateManipulation.increaseByTwoMonths(req.body.paymentDate);
         body={...body,dueDate};
-        console.log({monthlyDue:body});
+        
       }else if(req.body.paymentDate&&req.body.paymentPlan==="3months"){
-          console.log("paymentDate",req.body.paymentDate);
+         
           const dueDate=dateManipulation.increaseByThreeMonths(req.body.paymentDate);
         body={...body,dueDate};
-        console.log({monthlyDue:body});
+        
       }else if(req.body.paymentDate&&req.body.paymentPlan==="4months"){
           
           const dueDate=dateManipulation.increaseByFourMonths(req.body.paymentDate);
@@ -143,7 +143,7 @@ module.exports.getUsersStats=asyncErrorHandler(async (req,res,next)=>{
     let newOptions={};
 
     if(req.query.isActive){
-        console.log("i am isActive");
+       
         
         for(let key in options){
             
@@ -169,4 +169,30 @@ module.exports.getUsersStats=asyncErrorHandler(async (req,res,next)=>{
             users
         }
     });
+})
+
+module.exports.lockUser=asyncErrorHandler(async (req,res,next)=>{
+    const user=await User.findById(req.params.id);
+    if(!user){
+        return next(new CustomError('user not found',404))
+    }
+    user.status="disabled"
+    await user.save({ validateBeforeSave: false });
+    return res.status(200).json({
+        status:"success",
+        message:"user has been successfully suspended"
+    })
+})
+
+module.exports.unlockUser=asyncErrorHandler(async (req,res,next)=>{
+    const user=await User.findById(req.params.id);
+    if(!user){
+        return next(new CustomError('user not found',404))
+    }
+    user.status="enabled"
+    await user.save({ validateBeforeSave: false });
+    return res.status(200).json({
+        status:"success",
+        message:"user has been successfully suspended"
+    })
 })

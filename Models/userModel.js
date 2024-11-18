@@ -32,7 +32,7 @@ const userSchema=new mongoose.Schema({
     },
     matricNo:{
         type:String,
-        unique:true
+      
     },
     phoneNumber:{
         
@@ -124,7 +124,7 @@ balance:{
      
     status:{
         type:String,
-        default:"enable"
+        default:"enabled"
     },
     role: {
         type: String,
@@ -163,7 +163,7 @@ userSchema.pre('findOneAndUpdate',function(next){
             .digest('hex');
     
         this.verificationTokenExpires = Date.now() + 10 * 60 * 1000; // Token expires in 10 minutes
-    
+    //user should get plain token and not the encrypted reset token, the encrypted is saved in the database that is what is inside verificationToken
         return token;
     };
  module.exports.User=mongoose.model('User', userSchema);

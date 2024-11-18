@@ -36,6 +36,7 @@ const protect =asyncErrorHandler(async (req, res, next) => {
            return next(err);
       }
   
+    console.log(user);
     
       req.user = user;
       next();

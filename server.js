@@ -13,13 +13,16 @@ process.on('uncaughtException',(err)=>{
 const app=require('./index')
 
 const {PORT}=process.env;
-mongoose.connect(process.env.REMOTE_CONN_STR).then(()=>{
+// REMOTE_CONN_STR
+let url =process.env.NODE_ENV==="development"?process.env.LOCAL_CONN_STR:process.env.REMOTE_CONN_STR;
+
+
+mongoose.connect(url).then(()=>{
     console.log('connection to mongodb sucessful');
 })
 const server=app.listen(PORT || 8000,()=>{
     console.log('server running on port:'+ PORT);
     console.log(__filename);
-    
 })
 process.on('unhandledRejection',(err)=>{
 console.log(err.name,err.message);
