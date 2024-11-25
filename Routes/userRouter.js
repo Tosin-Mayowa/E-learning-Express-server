@@ -1,5 +1,5 @@
 const express=require('express');
-const { getAllUsers, getUsersStats,getUser,updateUser,deleteUser,  updateStatus,} = require('../Controllers/userController');
+const { getAllUsers, getUsersStats,getUser,updateUser,deleteUser,  updateStatus, updatePassword,} = require('../Controllers/userController');
 const router=express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { restrict } = require('../Controllers/authController');
@@ -23,6 +23,6 @@ router.route('/:id/status')
     .patch(protect, restrict('admin', 'sa'), updateStatus);
 
     router.route('/:id/update_password') 
-    // .patch(protect,updatePassword);
+    .patch(protect,updatePassword);
 
 module.exports=router;

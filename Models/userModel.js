@@ -4,7 +4,7 @@ const bcrypt=require("bcryptjs");
 const validator = require('validator');
 const crypto = require('crypto');
 const userSchema=new mongoose.Schema({
-    fullName: {
+    fullName: {   
         type: String,
         required: [true, "Name cannot be empty"],
         unique: true,

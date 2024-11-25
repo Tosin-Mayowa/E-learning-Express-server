@@ -5,10 +5,12 @@ const morgan=require('morgan');
 const authRouter=require('./Routes/authRouter');
 const cors = require('cors'); 
 const userRouter=require('./Routes/userRouter');
+const tutorRouter=require('./Routes/tutorsRouter');
 const { globalErrorHandler } = require('./Controllers/errorController');
 const CustomError = require('./utils/CustomError');
-const { swaggerDocs } = require('./utils/swagger');
 const swaggerUi = require('swagger-ui-express');
+const { swaggerDocs } = require('./utils/swagger');
+
 const app=express();
 
 
@@ -39,8 +41,11 @@ if(environment==='development'){
 app.get('/',(req,res)=>{
     res.send('live');
 })
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/users/profile',userRouter);
+app.use('/api/v1/tutor',tutorRouter);
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.all('*',(req,res,next)=>{
