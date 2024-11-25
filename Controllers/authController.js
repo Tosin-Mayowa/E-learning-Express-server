@@ -6,6 +6,7 @@ const CustomError = require('../utils/CustomError');
 const DateManipulation=require("../utils/DateManipulation");
 const sendEmail = require('../utils/EmailSender');
 const crypto = require('crypto');
+const { createSendResponse } = require('./userController');
 
 module.exports.restrict=(...role)=>{
   return (req,res,next)=>{
@@ -16,6 +17,45 @@ module.exports.restrict=(...role)=>{
     next();
   }
 }
+module.exports.logout= (req, res) => {
+    
+  res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+  
+  res.status(200).json({
+      status: 'success',
+      message: 'You have been logged out.'
+  });
+}
+
+module.exports.checkAuth = async (req, res, next) => {
+  try {
+      const token = req.cookies.jwt; // Extract token from cookie
+      console.log({token});
+      
+      if (!token) {
+          return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      // Verify the token
+      const decoded = jwt.verify(token, process.env.SECRET_STRING);
+      const user = await User.findById(decoded.id);
+      if (!user) {
+          return res.status(401).json({ message: 'User no longer exists' });
+      }
+
+      res.status(200).json({
+          status: 'success',
+          message: 'Authenticated',
+          user: { id: user._id, email: user.email },
+      });
+  } catch (error) {
+      res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
+
+
 module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
     console.log('body',req.body);
     
@@ -63,7 +103,7 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
 
   }
      
-  if (user.status!=="enabled") {
+  if (user.status!=="enable") {
     const  message='Your Account has been suspended,Kindly contact the admin.';
     const err=new CustomError(message,403);
    return next(err);
@@ -72,15 +112,7 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
   user.isActive=true;
   await user.save({ validateBeforeSave: false })
 
-  const token = jwt.sign({ id: user._id,email:user.email }, process.env.SECRET_STRING, {
-    expiresIn: process.env.EXPIRES_IN,
-  });
-
-  res.status(200).json({
-    status: 'success',
-    token,
-    expiresIn: process.env.EXPIRES_IN,
-  });
+  createSendResponse(user,res,200)
     })
   
 
@@ -155,8 +187,8 @@ module.exports.registerUser=asyncErrorHandler(async (req,res,next)=>{
     await user.save({ validateBeforeSave: false });
 
     // Send verification email
-    // const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${token}`;
-    const resetUrl = `${req.protocol}://localhost:5173/forgotPasswor/${token}`;
+    const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${token}`;
+    // const resetUrl = `${req.protocol}://localhost:5173/forgotPasswor/${token}`;
     
     const message = `We have have received a password reset request.Please use the below link to reset your password\n\n${resetUrl}`;
 

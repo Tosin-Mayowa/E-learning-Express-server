@@ -30,10 +30,14 @@ const userSchema=new mongoose.Schema({
         type:String,
         required:[true,"state cannot be empty"],
     },
-    matricNo:{
-        type:String,
+    matricNo: {
+        type: String,
+        
+    },    
       
-    },
+    
+      
+    
     phoneNumber:{
         
             type:Number,
@@ -124,7 +128,7 @@ balance:{
      
     status:{
         type:String,
-        default:"enabled"
+        default:"enable"
     },
     role: {
         type: String,

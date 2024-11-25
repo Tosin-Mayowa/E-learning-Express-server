@@ -1,5 +1,6 @@
 const {User}=require('../Models/userModel');
 const ApiFeatures=require("../utils/ApiFeatures");
+const jwt=require('jsonwebtoken');
 const { asyncErrorHandler } = require('../utils/asyncErrorHandler');
 const CustomError = require('../utils/CustomError');
 const DateManipulation=require("../utils/DateManipulation");
@@ -18,11 +19,29 @@ const DateManipulation=require("../utils/DateManipulation");
 //     next();
 // }
 
-
-module.exports.getAllUsers=asyncErrorHandler(async (req,res,next)=>{
-   
-   
+module.exports.createSendResponse=(user,res,statuscode)=>{
+    const token = jwt.sign({ id: user._id,email:user.email }, process.env.SECRET_STRING, {
+        expiresIn: process.env.EXPIRES_IN,
+      });
     
+      const options={
+        httpOnly:true,
+        maxAge:3600000,
+      }
+      if(process.env.NODE_ENV==='production'){
+        options.secure=true;
+      }
+      console.log({token});
+      res.cookie('jwt',token,options)
+
+
+      res.status(statuscode).json({
+        status: 'success',
+        id:user._id
+      });
+}
+module.exports.getAllUsers=asyncErrorHandler(async (req,res,next)=>{
+       
     const apiFeatures=new ApiFeatures(User.find(),req.query)
     .filter()
     .sort()
@@ -171,28 +190,20 @@ module.exports.getUsersStats=asyncErrorHandler(async (req,res,next)=>{
     });
 })
 
-module.exports.lockUser=asyncErrorHandler(async (req,res,next)=>{
+module.exports.updateStatus=asyncErrorHandler(async (req,res,next)=>{
     const user=await User.findById(req.params.id);
     if(!user){
         return next(new CustomError('user not found',404))
     }
-    user.status="disabled"
+    let message=req.body.status==='enable'?"account has been activated":"Account has been successfully suspended"
+    user.status=req.body.status
     await user.save({ validateBeforeSave: false });
     return res.status(200).json({
         status:"success",
-        message:"user has been successfully suspended"
+        message
     })
 })
 
-module.exports.unlockUser=asyncErrorHandler(async (req,res,next)=>{
-    const user=await User.findById(req.params.id);
-    if(!user){
-        return next(new CustomError('user not found',404))
-    }
-    user.status="enabled"
-    await user.save({ validateBeforeSave: false });
-    return res.status(200).json({
-        status:"success",
-        message:"user has been successfully suspended"
-    })
+module.exports.updatePassword=asyncErrorHandler(async (req,res,next)=>{
+
 })

@@ -1,5 +1,6 @@
 const environment=process.env.NODE_ENV ;
 const express=require('express');
+const cookieParser=require('cookie-parser');
 const morgan=require('morgan');
 const authRouter=require('./Routes/authRouter');
 const cors = require('cors'); 
@@ -11,7 +12,7 @@ const swaggerUi = require('swagger-ui-express');
 const app=express();
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174',
+const allowedOrigins =process.env.NODE_ENV === 'production'?['http://localhost:5173'] : ['http://localhost:5173', 'http://localhost:5174',
     'http://localhost:5175','https://e-learning-client-sqkb.vercel.app/'];
 
 const corsOptions = {
@@ -28,6 +29,7 @@ const corsOptions = {
     credentials: true,
 };
 
+app.use(cookieParser());
 app.use(cors(corsOptions));
 app.use(express.json());
 if(environment==='development'){
